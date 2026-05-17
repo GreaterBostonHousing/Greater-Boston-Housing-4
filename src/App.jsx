@@ -435,13 +435,33 @@ function BookingModal({room,onClose,isMobile}) {
     if(!stripeRef[0]||!cardElRef[0]) return;
     setPaymentLoading(true); setPaymentError("");
     try {
-      const {paymentMethod,error} = await stripeRef[0].createPaymentMethod({type:"card",card:cardElRef[0],billing_details:{name,email,phone}});
+      const {paymentMethod,error} = await stripeRef[0].createPaymentMethod({
+        type:"card",
+        card:cardElRef[0],
+        billing_details:{name,email,phone}
+      });
       if(error){ setPaymentError(error.message); setPaymentLoading(false); return; }
-      // PaymentMethod created — in production send paymentMethod.id + amount to your backend
-      // to create a PaymentIntent and confirm. For now we collect and confirm booking.
+
+      const response = await fetch('/api/charge', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          amount: schedule?.dueToday,
+          email, name,
+          room: room.name,
+          checkIn, checkOut,
+        }),
+      });
+
+      const result = await response.json();
+      if(result.error){ setPaymentError(result.error); setPaymentLoading(false); return; }
+
       setPaymentDone(true);
       setStep(4);
-    } catch(e){ setPaymentError("Something went wrong. Please try again."); }
+    } catch(e){
+      setPaymentError("Something went wrong. Please try again.");
+    }
     setPaymentLoading(false);
   };
 
