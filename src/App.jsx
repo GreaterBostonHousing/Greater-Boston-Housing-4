@@ -66,27 +66,27 @@ const rooms = [
     features: ["Queen Bed", "Wall-mounted Roku TV", "USB Charging Hub", "Standard Closet", "Private Smart Lock", "Hardwood Floors"],
     description: "Bright queen room with light blue walls, wall-mounted Roku TV, bedside USB charging hub, and a private smart lock for complete security.",
     images: [
-      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029925/IMG_2830_gao81j.jpg", label: "Room 1 – Main View" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029923/IMG_2827_hkd0ut.jpg", label: "Room 1 – Bed & Window" },
-      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029923/IMG_2826_xhtbrd.jpg", label: "Room 1 – Closet" },
-      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029925/IMG_2911_qih05a.jpg", label: "Room 1 – Smart Lock" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029925/IMG_2910_q0my6x.jpg", label: "Room 1 – Full View" },
+      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029925/IMG_2830_gao81j.jpg", label: "Room 1 – Main View" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029925/IMG_2866_pej2pn.jpg", label: "Room 1 – USB Hub" },
+      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029923/IMG_2826_xhtbrd.jpg", label: "Room 1 – Closet" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029923/IMG_2829_vac3db.jpg", label: "Room 1 – Closet Detail" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029924/IMG_2858_xtng20.jpg", label: "Room 1 – Smart Lock Door" },
+      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1779029925/IMG_2911_qih05a.jpg", label: "Room 1 – Smart Lock" },
     ]},
   { id: 2, name: "Room 2", bed: "Queen Bed", accent: "#B8843A",
     features: ["Queen Bed", "Platform Bed Frame", "Wall-mounted Smart TV", "USB Charging Hub", "Faux Fur Rug", "Smart Lock"],
     description: "Stylish queen room with dark wood platform frame, cozy faux fur rug, wall-mounted smart TV, and curtained closet with built-in shelving.",
     images: [
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983522/IMG_2916_ue2rxy.jpg", label: "Room 2 – Main View" },
-      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983520/IMG_2915_axa7xu.jpg", label: "Room 2 – Bed Side" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983520/IMG_2919_yvxuea.jpg", label: "Room 2 – Full Room" },
+      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983520/IMG_2915_axa7xu.jpg", label: "Room 2 – Bed Side" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983516/IMG_2917_gknffa.jpg", label: "Room 2 – Wide View" },
-      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983512/IMG_2858_fimwqp.jpg", label: "Room 2 – Smart Lock" },
-      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983510/IMG_2838_cmn0ht.jpg", label: "Room 2 – Closet" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983507/IMG_2831_tlqhfr.jpg", label: "Room 2 – Bed & TV" },
+      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983510/IMG_2838_cmn0ht.jpg", label: "Room 2 – Closet" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983505/IMG_2833_qn02xz.jpg", label: "Room 2 – Closet Detail" },
+      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983512/IMG_2858_fimwqp.jpg", label: "Room 2 – Smart Lock" },
     ]},
   { id: 3, name: "Room 3", bed: "Queen Bed", accent: "#A87830",
     features: ["Queen Bed", "Large Dresser", "Flat Screen TV", "Curtained Closet", "Double Windows", "Smart Lock"],
@@ -95,10 +95,10 @@ const rooms = [
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983884/IMG_2843_zhtlvt.jpg", label: "Room 3 – Main View" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983885/IMG_2845_ng6cyl.jpg", label: "Room 3 – Bed & Windows" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983886/IMG_2846_ujfw9t.jpg", label: "Room 3 – Full Room" },
-      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983891/IMG_2923_fgmiey.jpg", label: "Room 3 – Closet Open" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983888/IMG_2920_pkwxh9.jpg", label: "Room 3 – Wide View" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983894/IMG_2925_tjvfdq.jpg", label: "Room 3 – Dresser & TV" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983895/IMG_2924_bzfg0r.jpg", label: "Room 3 – Bed Side" },
+      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983891/IMG_2923_fgmiey.jpg", label: "Room 3 – Closet Open" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778983886/IMG_2858_evoonp.jpg", label: "Room 3 – Smart Lock" },
     ]},
   { id: 4, name: "Room 4", bed: "Full Bed", accent: "#C8944A",
@@ -106,9 +106,9 @@ const rooms = [
     description: "Perfect for remote workers! Dedicated desk with gaming chair, flat screen TV, bookshelf, and USB hub.",
     images: [
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984164/IMG_2794_jzojjr.jpg", label: "Room 4 – Main View" },
-      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984167/IMG_2792_vpgqze.jpg", label: "Room 4 – Desk & Chair" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984159/IMG_2790_poajxo.jpg", label: "Room 4 – Full Room" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984160/IMG_2791_m4cuuw.jpg", label: "Room 4 – Bed View" },
+      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984167/IMG_2792_vpgqze.jpg", label: "Room 4 – Desk & Chair" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984162/IMG_2793_uyhvag.jpg", label: "Room 4 – TV & Storage" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984168/IMG_2860_nnnhe7.jpg", label: "Room 4 – Closet" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984168/IMG_2865_sh1mxu.jpg", label: "Room 4 – USB Hub" },
@@ -119,10 +119,10 @@ const rooms = [
     description: "Ideal for travel companions! Two twin beds, large TV on white dresser, sliding mirror closet, and shared USB hub.",
     images: [
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984331/IMG_2851_tataof.jpg", label: "Room 5 – Twin Layout" },
-      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984335/IMG_2853_pmdjpu.jpg", label: "Room 5 – TV & Dresser" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984347/IMG_2855_fwlbel.jpg", label: "Room 5 – Both Beds" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984335/IMG_2852_ehlegf.jpg", label: "Room 5 – Full View" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984345/IMG_2857_xbdefp.jpg", label: "Room 5 – Beds Close-up" },
+      { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984335/IMG_2853_pmdjpu.jpg", label: "Room 5 – TV & Dresser" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984343/IMG_2854_oh0gbw.jpg", label: "Room 5 – Smart Lock Door" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984346/IMG_2856_zrczpv.jpg", label: "Room 5 – USB Hub" },
       { url: "https://res.cloudinary.com/dwtoz0ygv/image/upload/v1778984340/IMG_2858_atablc.jpg", label: "Room 5 – Smart Lock" },
@@ -222,7 +222,7 @@ function RoomDetail({ room, onBook, onClose, isMobile }) {
           </div>
           <button onClick={onClose} style={{ background: C.surface2, border: "1px solid #3a2e22", color: C.muted, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
         </div>
-        <Gallery images={room.images} mainH={260} />
+        <Gallery images={room.images} mainH={340} />
         <div style={{ padding: "18px 18px 24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
             <span style={{ fontSize: "28px", fontWeight: "800", color: C.text }}>$1,400<span style={{ fontSize: "13px", fontWeight: "500", color: C.muted }}>/mo</span></span>
@@ -251,7 +251,7 @@ function RoomCard({ room, onBook, isMobile }) {
         style={{ background: C.surface, borderRadius: "16px", overflow: "hidden", border: `1px solid ${hov ? room.accent + "55" : C.border}`, boxShadow: hov ? `0 12px 40px rgba(0,0,0,0.5)` : "0 4px 20px rgba(0,0,0,0.4)", transition: "all 0.3s", transform: hov && !isMobile ? "translateY(-4px)" : "none", cursor: "pointer", display: "flex", flexDirection: "column" }}>
         <div style={{ position: "relative", overflow: "hidden" }} onClick={() => setShowDetail(true)}>
           <img src={room.images[0].url} alt={room.images[0].label} loading="lazy"
-            style={{ width: "100%", height: "210px", objectFit: "cover", display: "block", transition: "transform 0.3s", transform: hov ? "scale(1.04)" : "scale(1)" }}
+            style={{ width: "100%", height: "260px", objectFit: "cover", display: "block", transition: "transform 0.3s", transform: hov ? "scale(1.04)" : "scale(1)" }}
             onError={e => e.target.style.display = "none"} />
           <div style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", borderRadius: "8px", padding: "4px 10px", fontSize: "11px", color: "white", fontWeight: "600" }}>
             📷 {room.images.length} photos
