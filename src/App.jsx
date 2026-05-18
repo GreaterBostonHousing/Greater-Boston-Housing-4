@@ -212,30 +212,94 @@ function Gallery({ images, mainH = 200 }) {
 }
 
 function RoomDetail({ room, onBook, onClose, isMobile }) {
+  const [activeImg, setActiveImg] = useState(0);
+
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", zIndex: 900, padding: isMobile ? 0 : "20px" }}>
-      <div style={{ background: C.surface, borderRadius: isMobile ? "24px 24px 0 0" : "20px", width: "100%", maxWidth: "600px", maxHeight: isMobile ? "92vh" : "88vh", overflowY: "auto", border: "1px solid #3a2e22" }}>
-        <div style={{ position: "sticky", top: 0, zIndex: 10, background: C.surface, padding: "16px 18px", borderBottom: "1px solid #3a2e22", display: "flex", justifyContent: "space-between", alignItems: "center", borderRadius: isMobile ? "24px 24px 0 0" : "20px 20px 0 0" }}>
-          <div>
-            <div style={{ fontSize: "10px", letterSpacing: "2px", color: room.accent, fontWeight: "700", textTransform: "uppercase" }}>🛏️ {room.bed}</div>
-            <div style={{ fontSize: "20px", fontWeight: "800", color: C.text, fontFamily: "'Playfair Display',serif" }}>{room.name}</div>
-          </div>
-          <button onClick={onClose} style={{ background: C.surface2, border: "1px solid #3a2e22", color: C.muted, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+    <div style={{ position: "fixed", inset: 0, background: C.bg, zIndex: 900, overflowY: "auto" }}>
+
+      {/* Top bar */}
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: C.surface, borderBottom: "1px solid #3a2e22", padding: isMobile ? "14px 16px" : "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button onClick={onClose} style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: "14px", fontWeight: "600", fontFamily: "inherit", padding: "6px 0" }}>
+          ← Back to Rooms
+        </button>
+        <div style={{ fontSize: isMobile ? "14px" : "16px", fontWeight: "800", color: C.text, fontFamily: "'Playfair Display',serif" }}>{room.name}</div>
+        <button onClick={() => onBook(room)} style={{ background: `linear-gradient(135deg,${room.accent},#a07535)`, color: "#0d0a06", border: "none", borderRadius: "8px", padding: isMobile ? "8px 16px" : "10px 24px", fontSize: isMobile ? "13px" : "14px", fontWeight: "800", cursor: "pointer", fontFamily: "inherit" }}>
+          Book Now
+        </button>
+      </div>
+
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: isMobile ? "20px 14px 60px" : "36px 24px 60px" }}>
+
+        {/* Main photo */}
+        <div style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "8px", background: "#1a1410" }}>
+          <img src={room.images[activeImg]?.url} alt={room.images[activeImg]?.label}
+            style={{ width: "100%", height: isMobile ? "260px" : "480px", objectFit: "cover", display: "block" }}
+            onError={e => e.target.style.display = "none"} />
         </div>
-        <Gallery images={room.images} mainH={340} />
-        <div style={{ padding: "18px 18px 24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "28px", fontWeight: "800", color: C.text }}>$1,400<span style={{ fontSize: "13px", fontWeight: "500", color: C.muted }}>/mo</span></span>
-            <span style={{ fontSize: "13px", color: C.dim, textDecoration: "line-through" }}>$1,500</span>
-            <span style={{ background: C.greenBg, color: C.green, borderRadius: "6px", padding: "3px 10px", fontSize: "11px", fontWeight: "800", border: "1px solid #253d14" }}>SAVE $100/mo</span>
+
+        {/* Thumbnail strip */}
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${room.images.length}, 1fr)`, gap: "6px", marginBottom: "32px" }}>
+          {room.images.map((img, i) => (
+            <div key={i} onClick={() => setActiveImg(i)}
+              style={{ borderRadius: "8px", overflow: "hidden", cursor: "pointer", border: `2px solid ${i === activeImg ? room.accent : "transparent"}`, transition: "border 0.15s", aspectRatio: "1" }}>
+              <img src={img.url} alt={img.label}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                onError={e => e.target.style.background = "#1a1410"} />
+            </div>
+          ))}
+        </div>
+
+        {/* Room info */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 340px", gap: "24px", alignItems: "start" }}>
+
+          {/* Left — description & features */}
+          <div>
+            <div style={{ fontSize: "11px", letterSpacing: "2px", color: room.accent, fontWeight: "700", textTransform: "uppercase", marginBottom: "6px" }}>🛏️ {room.bed}</div>
+            <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: isMobile ? "28px" : "36px", fontWeight: "800", color: C.text, marginBottom: "16px" }}>{room.name}</h1>
+            <p style={{ fontSize: "15px", color: C.muted, lineHeight: "1.75", marginBottom: "24px" }}>{room.description}</p>
+
+            <h3 style={{ fontFamily: "'Playfair Display',serif", color: C.text, fontSize: "18px", fontWeight: "700", marginBottom: "14px" }}>Room Features</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "24px" }}>
+              {room.features.map((f, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", background: C.surface, borderRadius: "10px", padding: "12px 14px", border: "1px solid #3a2e22" }}>
+                  <span style={{ color: room.accent, fontWeight: "800", fontSize: "16px" }}>✓</span>
+                  <span style={{ fontSize: "13px", color: C.text, fontWeight: "600" }}>{f}</span>
+                </div>
+              ))}
+            </div>
+
+            <h3 style={{ fontFamily: "'Playfair Display',serif", color: C.text, fontSize: "18px", fontWeight: "700", marginBottom: "14px" }}>What's Included</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              {[["📶","High-Speed WiFi"],["💡","All Utilities"],["🚗","Free Parking"],["🫧","Washer/Dryer"],["🔐","Private Smart Lock"],["📺","Smart TV"]].map(([icon,label],i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: C.muted }}>
+                  <span>{icon}</span><span>{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <p style={{ fontSize: "14px", color: C.muted, lineHeight: "1.7", marginBottom: "16px" }}>{room.description}</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "20px" }}>
-            {room.features.map((f, i) => <span key={i} style={{ background: `${room.accent}12`, color: room.accent, borderRadius: "6px", padding: "4px 10px", fontSize: "11px", fontWeight: "700", border: `1px solid ${room.accent}25` }}>{f}</span>)}
+
+          {/* Right — booking card */}
+          <div style={{ background: C.surface, borderRadius: "16px", border: "1px solid #3a2e22", padding: "24px", position: isMobile ? "static" : "sticky", top: "80px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "32px", fontWeight: "800", color: C.text }}>$1,400<span style={{ fontSize: "14px", fontWeight: "500", color: C.muted }}>/mo</span></span>
+              <span style={{ fontSize: "14px", color: C.dim, textDecoration: "line-through" }}>$1,500</span>
+            </div>
+            <div style={{ background: C.greenBg, border: "1px solid #253d14", borderRadius: "8px", padding: "8px 12px", marginBottom: "16px", fontSize: "13px", color: C.green, fontWeight: "700" }}>
+              🎉 $100/month monthly stay discount
+            </div>
+            <div style={{ fontSize: "13px", color: C.muted, lineHeight: "1.7", marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}><span>Deposit (stays over 45 days)</span><span style={{ color: C.text, fontWeight: "700" }}>$700</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}><span>Monthly rate</span><span style={{ color: C.text, fontWeight: "700" }}>$1,400/mo</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span>Utilities & WiFi</span><span style={{ color: C.green, fontWeight: "700" }}>Included</span></div>
+            </div>
+            <button onClick={() => { onClose(); onBook(room); }}
+              style={{ width: "100%", background: `linear-gradient(135deg,${room.accent},#a07535)`, color: "#0d0a06", border: "none", borderRadius: "12px", padding: "16px", fontSize: "16px", fontWeight: "800", cursor: "pointer", fontFamily: "inherit", marginBottom: "12px" }}>
+              Book This Room →
+            </button>
+            <div style={{ fontSize: "12px", color: C.muted, textAlign: "center" }}>🔒 Secure payment via Stripe</div>
+            <div style={{ fontSize: "12px", color: C.muted, textAlign: "center", marginTop: "4px" }}>🕒 Check-in: 3:00 PM · Check-out: 11:00 AM</div>
+            <div style={{ fontSize: "12px", color: C.muted, textAlign: "center", marginTop: "4px" }}>📱 Door codes texted at 8 AM on move-in day</div>
           </div>
-          <button onClick={() => { onClose(); onBook(room); }} style={{ background: `linear-gradient(135deg,${room.accent},#a07535)`, color: "#0d0a06", border: "none", borderRadius: "12px", padding: "15px", fontSize: "15px", fontWeight: "800", cursor: "pointer", width: "100%", fontFamily: "inherit" }}>
-            Book This Room →
-          </button>
         </div>
       </div>
     </div>
@@ -342,7 +406,7 @@ function PriceBreakdown({ ci, co }) {
 
 function SmsPreview({ name, moveIn }) {
   const dateStr = moveIn ? new Date(moveIn + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "your check-in day";
-  const msg = "🏠 Greater Boston Housing\n\nGood morning, " + (name || "Tenant") + "!\nToday is your check-in day.\n\n🔐 Your private door code:\n[ Sent separately for security ]\n\n🕙 Check-in: anytime after 10:00 AM\n\n📋 WiFi password & house rules posted in the kitchen.\n\nWelcome home! Text us if you need anything. 😊";
+  const msg = "🏠 Greater Boston Housing\n\nGood morning, " + (name || "Tenant") + "!\nToday is your check-in day.\n\n🕒 Check-in time: 3:00 PM\n🕙 Check-out time: 11:00 AM\n\n🚪 Outside front door code:\n[ Sent separately for security ]\n\n🔐 Your private room code:\n[ Sent separately for security ]\n\n📍 Address provided in your lease agreement.\n\n📋 WiFi password & house rules posted in the kitchen.\n\nWelcome home! Text us if you need anything. 😊\n\n📞 (781) 539-2300";
   return (
     <div style={{ background: "#080604", borderRadius: "14px", padding: "14px", border: "1px solid #3a2e22", marginTop: "14px" }}>
       <div style={{ fontSize: "11px", color: C.dim, marginBottom: "10px" }}>📱 Auto-sent on <strong style={{ color: C.accent }}>{dateStr} at 8:00 AM</strong></div>
@@ -479,17 +543,18 @@ function BookingModal({ room, onClose, isMobile }) {
                 <h4 style={{ margin: "0 0 10px", color: C.text, fontSize: "13px" }}>GREATER BOSTON HOUSING — RENTAL AGREEMENT</h4>
                 <p><strong style={{ color: C.text }}>Tenant:</strong> {name}</p>
                 <p><strong style={{ color: C.text }}>Property:</strong> Medford, MA — {room.name} ({room.bed})</p>
-                <p><strong style={{ color: C.text }}>Check-in:</strong> {checkIn} &nbsp;|&nbsp; <strong style={{ color: C.text }}>Check-out:</strong> {checkOut}</p>
+                <p><strong style={{ color: C.text }}>Check-in:</strong> {checkIn} at 3:00 PM &nbsp;|&nbsp; <strong style={{ color: C.text }}>Check-out:</strong> {checkOut} at 11:00 AM</p>
                 {schedule && <p><strong style={{ color: C.text }}>Payment:</strong> {schedule.isShort ? "Full payment of $" + schedule.totalEst.toLocaleString() + " due at signing." : "$" + schedule.dueToday.toLocaleString() + " due at signing ($700 deposit + " + schedule.firstDays + " days prorated). Then $1,400 on the 1st of each month. Total est: $" + schedule.totalEst.toLocaleString() + "."}</p>}
-                <p><strong style={{ color: C.text }}>1. USE:</strong> Residential only. Common areas shared.</p>
-                <p><strong style={{ color: C.text }}>2. RENT:</strong> $1,400/month. $50 late fee after the 5th.</p>
-                <p><strong style={{ color: C.text }}>3. RULES:</strong> No smoking. No pets without approval. Quiet hours 10pm–8am.</p>
-                <p><strong style={{ color: C.text }}>4. UTILITIES:</strong> Electric, heat, water, and WiFi included.</p>
-                <p><strong style={{ color: C.text }}>5. DEPOSIT:</strong> $700 required at signing. Returned at end of stay.</p>
-                <p><strong style={{ color: C.text }}>6. SMART LOCK:</strong> Private code provided. Must not be shared.</p>
-                <p><strong style={{ color: C.text }}>7. CHECK-IN SMS:</strong> Entry instructions sent at 8 AM on check-in date.</p>
-                <p><strong style={{ color: C.text }}>8. TERMINATION:</strong> 30 days written notice from either party.</p>
-                <p><strong style={{ color: C.text }}>9. ACCESS:</strong> Landlord may enter with 24-hour notice.</p>
+                <p><strong style={{ color: C.text }}>1. USE:</strong> Residential only. Common areas shared with other tenants.</p>
+                <p><strong style={{ color: C.text }}>2. RENT:</strong> $1,400/month due on the 1st. If payment is not received by the 5th of the month, tenant forfeits their right to occupy the property and landlord may request immediate vacating of the premises. A $50 late fee also applies.</p>
+                <p><strong style={{ color: C.text }}>3. CHECK-IN/OUT:</strong> Check-in is at 3:00 PM on move-in date. Check-out is at 11:00 AM on move-out date.</p>
+                <p><strong style={{ color: C.text }}>4. RULES:</strong> No smoking. No pets without approval. Quiet hours 10pm–8am. Keep shared spaces clean.</p>
+                <p><strong style={{ color: C.text }}>5. UTILITIES:</strong> Electric, heat, water, and WiFi included.</p>
+                <p><strong style={{ color: C.text }}>6. DEPOSIT:</strong> $700 required at signing. Returned at end of stay barring damages.</p>
+                <p><strong style={{ color: C.text }}>7. ACCESS CODES:</strong> Tenant will receive two codes — one for the outside front door and one private code for their room. Both codes must not be shared with anyone.</p>
+                <p><strong style={{ color: C.text }}>8. CHECK-IN SMS:</strong> Both door codes and entry instructions sent via text at 8 AM on check-in date.</p>
+                <p><strong style={{ color: C.text }}>9. TERMINATION:</strong> 30 days written notice from either party. Failure to pay rent by the 5th is grounds for immediate removal.</p>
+                <p><strong style={{ color: C.text }}>10. ACCESS:</strong> Landlord may enter with 24-hour notice.</p>
                 <p style={{ color: C.dim, fontSize: "12px", marginTop: "8px" }}>By checking below you agree to all terms above.</p>
               </div>
               <label style={{ display: "flex", gap: "12px", cursor: "pointer", marginBottom: "16px", alignItems: "flex-start" }}>
@@ -663,7 +728,7 @@ export default function GreaterBostonHousing() {
                 </div>
               ))}
             </div>
-            {[{ icon: "📱", title: "Automatic Check-In Text", body: "On the morning of your check-in at 8:00 AM sharp, you'll automatically receive a text with your private door code and full entry instructions. No waiting — just walk right in." },
+            {[{ icon: "📱", title: "Automatic Check-In Text", body: "On the morning of your check-in day at 8:00 AM, you'll automatically receive a text with your outside front door code and your private room code. Check-in is at 3:00 PM. Check-out is at 11:00 AM. No waiting, no phone tag — just walk right in." },
               { icon: "🚗", title: "Free Parking Near Boston", body: "Free on-site parking is a rare find near Boston. Skip the $200+/month garage fees and park right at home — included with every room." }
             ].map((item, i) => (
               <div key={i} style={{ marginTop: "14px", background: "#C8944A0a", border: "1px solid #C8944A25", borderRadius: "16px", padding: isMobile ? "20px 16px" : "24px 28px", display: "flex", gap: "14px", alignItems: "flex-start", flexDirection: isMobile ? "column" : "row" }}>
@@ -778,7 +843,7 @@ export default function GreaterBostonHousing() {
               <h3 style={{ fontFamily: "'Playfair Display',serif", color: C.text, fontSize: isMobile ? "20px" : "22px", fontWeight: "700", marginBottom: "16px", textAlign: "center" }}>Frequently Asked Questions</h3>
               {[
                 ["How do I book a room?", "Click on any room, view the photos, fill in your dates, sign the lease digitally, and pay securely with your card. You'll get a confirmation immediately."],
-                ["When do I get my door code?", "On the morning of your check-in day at 8:00 AM, you'll automatically receive a text with your private door code and full entry instructions."],
+                ["When do I get my door code?", "On the morning of your check-in day at 8:00 AM, you'll automatically receive a text with two codes — one for the outside front door and one private code for your room. Check-in is at 3:00 PM and check-out is at 11:00 AM."],
                 ["What's included in rent?", "WiFi, all utilities (electric, heat, water), free parking, washer/dryer, coffee machine, and ironing board — all included."],
                 ["How does the deposit work?", "For stays over 45 days, a $700 deposit is required at signing along with your prorated first month. The deposit is returned at the end of your stay."],
                 ["Can I extend my stay?", "Absolutely! Just reach out before your check-out date and we'll sort it out. Month-to-month renewals are always welcome."],
