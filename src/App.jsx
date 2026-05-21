@@ -20,6 +20,7 @@ function calcPaymentSchedule(ci, co) {
   const d1 = new Date(ci + "T00:00:00"), d2 = new Date(co + "T00:00:00");
   if (d2 <= d1) return null;
   const totalDays = Math.round((d2 - d1) / 86400000);
+  if (totalDays < 30) return null; // Minimum 30 days
   const fmt = d => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   if (totalDays <= 45) {
     const totalEst = Math.round(totalDays * DAILY);
@@ -52,6 +53,7 @@ function calcPrice(ci, co) {
   const d1 = new Date(ci + "T00:00:00"), d2 = new Date(co + "T00:00:00");
   if (d2 <= d1) return null;
   const days = Math.round((d2 - d1) / 86400000);
+  if (days < 30) return null; // Minimum 30 days
   return { days, total: Math.round(days * DAILY) };
 }
 
@@ -405,16 +407,30 @@ function PriceBreakdown({ ci, co }) {
 }
 
 function SmsPreview({ name, moveIn }) {
+  const today = new Date().toISOString().split("T")[0];
+  const isCheckinDay = moveIn === today;
   const dateStr = moveIn ? new Date(moveIn + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "your check-in day";
-  const msg = "🏠 Greater Boston Housing\n\nGood morning, " + (name || "Tenant") + "!\nToday is your check-in day.\n\n🕒 Check-in time: 3:00 PM\n🕙 Check-out time: 11:00 AM\n\n🚪 Outside front door code:\n[ Sent separately for security ]\n\n🔐 Your private room code:\n[ Sent separately for security ]\n\n📍 Address provided in your lease agreement.\n\n📋 WiFi password & house rules posted in the kitchen.\n\nWelcome home! Text us if you need anything. 😊\n\n📞 (781) 539-2300";
+
+  const fullMsg = "🏠 Greater Boston Housing\n\nGood morning, " + (name || "Tenant") + "!\nToday is your check-in day.\n\n📍 Address:\n20 Hadley Pl, Medford, MA 02155\nUpstairs apartment — enter from the\nfront door OR the upstairs back door.\n\n🚪 Outside front door code:\n[ Provided securely ]\n\n🔐 Your private room code:\n[ Provided securely ]\n\n📶 WiFi Name: TMobile-A500\n🔑 WiFi Password: aydin1212\n\n🕒 Check-in: 3:00 PM\n🕙 Check-out: 11:00 AM\n\n📋 House rules posted in the kitchen.\n\nWelcome home! Text us anytime.\n📞 (781) 539-2300";
+
   return (
     <div style={{ background: "#080604", borderRadius: "14px", padding: "14px", border: "1px solid #3a2e22", marginTop: "14px" }}>
-      <div style={{ fontSize: "11px", color: C.dim, marginBottom: "10px" }}>📱 Auto-sent on <strong style={{ color: C.accent }}>{dateStr} at 8:00 AM</strong></div>
-      <div style={{ background: "#111", borderRadius: "12px", padding: "12px", maxWidth: "280px", margin: "0 auto" }}>
-        <div style={{ fontSize: "10px", color: C.dim, marginBottom: "8px", textAlign: "center" }}>Greater Boston Housing · Text Message</div>
-        <div style={{ background: "#2563eb", borderRadius: "14px 14px 3px 14px", padding: "10px 13px", fontSize: "12px", color: "white", lineHeight: "1.65", whiteSpace: "pre-line" }}>{msg}</div>
-        <div style={{ fontSize: "10px", color: C.dim, marginTop: "5px", textAlign: "right" }}>Delivered ✓✓</div>
+      <div style={{ fontSize: "11px", color: C.dim, marginBottom: "10px" }}>
+        📱 Auto-sent on <strong style={{ color: C.accent }}>{dateStr} at 8:00 AM</strong>
       </div>
+      {!isCheckinDay ? (
+        <div style={{ background: C.surface2, border: "1px solid #3a2e22", borderRadius: "12px", padding: "16px", textAlign: "center" }}>
+          <div style={{ fontSize: "24px", marginBottom: "8px" }}>🔒</div>
+          <div style={{ fontSize: "13px", fontWeight: "700", color: C.text, marginBottom: "4px" }}>Message Locked Until Check-in Day</div>
+          <div style={{ fontSize: "12px", color: C.muted, lineHeight: "1.5" }}>Your door codes, WiFi password, and full entry instructions will be texted to you automatically on the morning of <strong style={{ color: C.accent }}>{dateStr}</strong> at 8:00 AM.</div>
+        </div>
+      ) : (
+        <div style={{ background: "#111", borderRadius: "12px", padding: "12px", maxWidth: "280px", margin: "0 auto" }}>
+          <div style={{ fontSize: "10px", color: C.dim, marginBottom: "8px", textAlign: "center" }}>Greater Boston Housing · Text Message</div>
+          <div style={{ background: "#2563eb", borderRadius: "14px 14px 3px 14px", padding: "10px 13px", fontSize: "12px", color: "white", lineHeight: "1.65", whiteSpace: "pre-line" }}>{fullMsg}</div>
+          <div style={{ fontSize: "10px", color: C.dim, marginTop: "5px", textAlign: "right" }}>Delivered ✓✓</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -432,6 +448,8 @@ function BookingModal({ room, onClose, isMobile }) {
   const [paymentError, setPaymentError] = useState("");
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [stripeLoaded, setStripeLoaded] = useState(false);
+  const [availabilityChecking, setAvailabilityChecking] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState("");
   const stripeInst = useRef(null);
   const cardEl = useRef(null);
 
@@ -463,18 +481,82 @@ function BookingModal({ room, onClose, isMobile }) {
   const schedule = calcPaymentSchedule(checkIn, checkOut);
   const canGo = name && email && phone && checkIn && checkOut && price;
   const today = new Date().toISOString().split("T")[0];
+  const sessionId = useRef(Math.random().toString(36).slice(2) + Date.now());
+
+  const handleContinue = async () => {
+    if (!canGo) return;
+    setAvailabilityChecking(true);
+    setAvailabilityError("");
+    try {
+      // Check availability
+      const res = await fetch("/api/check-availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room: room.name, checkIn, checkOut }),
+      });
+      const data = await res.json();
+      if (!data.available) {
+        setAvailabilityError(data.message || "These dates are not available for this room.");
+        setAvailabilityChecking(false);
+        return;
+      }
+      // Create a 15-min hold to prevent double booking during checkout
+      await fetch("/api/hold", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room: room.name, checkIn, checkOut, sessionId: sessionId.current }),
+      }).catch(() => {});
+    } catch (e) { /* fail open */ }
+    setAvailabilityChecking(false);
+    setStep(2);
+  };
+
+  // Release hold if user closes modal
+  const handleClose = () => {
+    fetch("/api/hold", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: sessionId.current }),
+    }).catch(() => {});
+    onClose();
+  };
 
   const handlePay = async () => {
-    if (!stripeInst.current || !cardEl.current) return;
+    if (!stripeInst.current || !cardEl.current) {
+      setPaymentError("Payment system not loaded. Please refresh and try again.");
+      return;
+    }
     setPaymentLoading(true); setPaymentError("");
     try {
-      const { paymentMethod, error } = await stripeInst.current.createPaymentMethod({ type: "card", card: cardEl.current, billing_details: { name, email, phone } });
+      const { paymentMethod, error } = await stripeInst.current.createPaymentMethod({
+        type: "card",
+        card: cardEl.current,
+        billing_details: { name, email, phone }
+      });
       if (error) { setPaymentError(error.message); setPaymentLoading(false); return; }
-      const response = await fetch("/api/charge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paymentMethodId: paymentMethod.id, amount: schedule?.dueToday, email, name, room: room.name, checkIn, checkOut }) });
+
+      const response = await fetch("/api/charge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          amount: schedule?.dueToday,
+          email, name, phone,
+          room: room.name,
+          bed: room.bed,
+          checkIn, checkOut,
+          totalEst: schedule?.totalEst,
+          isShort: schedule?.isShort,
+          sessionId: sessionId.current,
+        }),
+      });
+
       const result = await response.json();
       if (result.error) { setPaymentError(result.error); setPaymentLoading(false); return; }
       setStep(4);
-    } catch (e) { setPaymentError("Something went wrong. Please try again."); }
+    } catch (e) {
+      setPaymentError("Connection error. Please check your internet and try again.");
+    }
     setPaymentLoading(false);
   };
 
@@ -491,7 +573,7 @@ function BookingModal({ room, onClose, isMobile }) {
             </div>
             <div style={{ color: C.text, fontWeight: "800", fontSize: "16px", fontFamily: "'Playfair Display',serif", marginTop: "2px" }}>{room.name} · {room.bed}</div>
           </div>
-          <button onClick={onClose} style={{ background: C.surface2, border: "1px solid #3a2e22", color: C.muted, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>×</button>
+          <button onClick={handleClose} style={{ background: C.surface2, border: "1px solid #3a2e22", color: C.muted, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>×</button>
         </div>
 
         <div style={{ padding: isMobile ? "18px 16px 40px" : "20px 22px 28px" }}>
@@ -510,7 +592,15 @@ function BookingModal({ room, onClose, isMobile }) {
                 <div><label style={lS}>Check-out Date</label><input type="date" value={checkOut} min={checkIn || today} onChange={e => setCheckOut(e.target.value)} style={iS} /></div>
               </div>
               <PriceBreakdown ci={checkIn} co={checkOut} />
-              {checkIn && checkOut && !price && <div style={{ fontSize: "12px", color: "#e05050", padding: "6px 10px", background: "#2a1010", borderRadius: "8px", border: "1px solid #4a2020", margin: "8px 0" }}>⚠️ Check-out must be after check-in</div>}
+              {checkIn && checkOut && !price && (() => {
+                const d1 = new Date(checkIn + "T00:00:00"), d2 = new Date(checkOut + "T00:00:00");
+                const days = Math.round((d2 - d1) / 86400000);
+                return (
+                  <div style={{ fontSize: "12px", color: "#e05050", padding: "8px 12px", background: "#2a1010", borderRadius: "8px", border: "1px solid #4a2020", margin: "8px 0" }}>
+                    {days < 0 || d2 <= d1 ? "⚠️ Check-out must be after check-in" : `⚠️ Minimum stay is 30 days. Your selection is only ${days} day${days !== 1 ? "s" : ""}.`}
+                  </div>
+                );
+              })()}
               {name && checkIn && (
                 <div style={{ margin: "12px 0" }}>
                   <button onClick={() => setShowSms(s => !s)} style={{ background: "none", border: "1px solid #3a2e22", color: C.muted, borderRadius: "8px", padding: "7px 12px", fontSize: "12px", fontWeight: "600", cursor: "pointer", fontFamily: "inherit" }}>
@@ -519,8 +609,9 @@ function BookingModal({ room, onClose, isMobile }) {
                   {showSms && <SmsPreview name={name} moveIn={checkIn} />}
                 </div>
               )}
-              <button onClick={() => canGo && setStep(2)} style={{ width: "100%", background: canGo ? "linear-gradient(135deg,#C8944A,#a07535)" : C.surface2, color: canGo ? "#0d0a06" : C.dim, border: "none", borderRadius: "12px", padding: "14px", fontSize: "15px", fontWeight: "800", cursor: canGo ? "pointer" : "not-allowed", fontFamily: "inherit", marginTop: "12px" }}>
-                Continue to Lease Agreement →
+              {availabilityError && <div style={{ fontSize: "12px", color: "#e05050", padding: "8px 12px", background: "#2a1010", borderRadius: "8px", border: "1px solid #4a2020", margin: "8px 0" }}>🚫 {availabilityError}</div>}
+              <button onClick={handleContinue} disabled={!canGo || availabilityChecking} style={{ width: "100%", background: canGo && !availabilityChecking ? "linear-gradient(135deg,#C8944A,#a07535)" : C.surface2, color: canGo && !availabilityChecking ? "#0d0a06" : C.dim, border: "none", borderRadius: "12px", padding: "14px", fontSize: "15px", fontWeight: "800", cursor: canGo && !availabilityChecking ? "pointer" : "not-allowed", fontFamily: "inherit", marginTop: "12px" }}>
+                {availabilityChecking ? "Checking availability..." : "Continue to Lease Agreement →"}
               </button>
             </>
           )}
@@ -548,13 +639,14 @@ function BookingModal({ room, onClose, isMobile }) {
                 <p><strong style={{ color: C.text }}>1. USE:</strong> Residential only. Common areas shared with other tenants.</p>
                 <p><strong style={{ color: C.text }}>2. RENT:</strong> $1,400/month due on the 1st. If payment is not received by the 5th of the month, tenant forfeits their right to occupy the property and landlord may request immediate vacating of the premises. A $50 late fee also applies.</p>
                 <p><strong style={{ color: C.text }}>3. CHECK-IN/OUT:</strong> Check-in is at 3:00 PM on move-in date. Check-out is at 11:00 AM on move-out date.</p>
-                <p><strong style={{ color: C.text }}>4. RULES:</strong> No smoking. No pets without approval. Quiet hours 10pm–8am. Keep shared spaces clean.</p>
-                <p><strong style={{ color: C.text }}>5. UTILITIES:</strong> Electric, heat, water, and WiFi included.</p>
-                <p><strong style={{ color: C.text }}>6. DEPOSIT:</strong> $700 required at signing. Returned at end of stay barring damages.</p>
-                <p><strong style={{ color: C.text }}>7. ACCESS CODES:</strong> Tenant will receive two codes — one for the outside front door and one private code for their room. Both codes must not be shared with anyone.</p>
-                <p><strong style={{ color: C.text }}>8. CHECK-IN SMS:</strong> Both door codes and entry instructions sent via text at 8 AM on check-in date.</p>
-                <p><strong style={{ color: C.text }}>9. TERMINATION:</strong> 30 days written notice from either party. Failure to pay rent by the 5th is grounds for immediate removal.</p>
-                <p><strong style={{ color: C.text }}>10. ACCESS:</strong> Landlord may enter with 24-hour notice.</p>
+                <p><strong style={{ color: C.text }}>4. ENTRY:</strong> The property is located in the upstairs apartment at 20 Hadley Pl, Medford, MA 02155. Tenant may enter through the front door or the upstairs back door using their provided access code.</p>
+                <p><strong style={{ color: C.text }}>5. RULES:</strong> No smoking anywhere on the premises. No pets without written approval. Quiet hours 10pm–8am. Tenants must wash their own dishes promptly and keep all shared spaces (kitchen, bathroom, living room) clean and tidy at all times.</p>
+                <p><strong style={{ color: C.text }}>6. UTILITIES:</strong> Electric, heat, water, and WiFi included in rent. WiFi Network: TMobile-A500 · Password: aydin1212</p>
+                <p><strong style={{ color: C.text }}>7. DEPOSIT:</strong> $700 required at signing. Returned at end of stay barring any damages.</p>
+                <p><strong style={{ color: C.text }}>8. ACCESS CODES:</strong> Tenant receives one code for the outside front door and one private code for their room. Both codes are strictly confidential and must not be shared with anyone.</p>
+                <p><strong style={{ color: C.text }}>9. CHECK-IN SMS:</strong> Both door codes, full address, and WiFi details sent via text at 8 AM on check-in date.</p>
+                <p><strong style={{ color: C.text }}>10. TERMINATION:</strong> 30 days written notice from either party. Failure to pay rent by the 5th is grounds for immediate removal.</p>
+                <p><strong style={{ color: C.text }}>11. LANDLORD ACCESS:</strong> Landlord may enter with 24-hour notice for inspections or repairs.</p>
                 <p style={{ color: C.dim, fontSize: "12px", marginTop: "8px" }}>By checking below you agree to all terms above.</p>
               </div>
               <label style={{ display: "flex", gap: "12px", cursor: "pointer", marginBottom: "16px", alignItems: "flex-start" }}>
@@ -624,12 +716,120 @@ function BookingModal({ room, onClose, isMobile }) {
   );
 }
 
+function AdminDashboard({ onClose, isMobile }) {
+  const [password, setPassword] = useState("");
+  const [authed, setAuthed] = useState(false);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const login = async () => {
+    setLoading(true); setError("");
+    try {
+      const res = await fetch("/api/bookings", {
+        headers: { "Authorization": `Bearer ${password}` },
+      });
+      if (res.status === 401) { setError("Wrong password"); setLoading(false); return; }
+      const data = await res.json();
+      setBookings(data.records || []);
+      setAuthed(true);
+    } catch (e) { setError("Connection failed"); }
+    setLoading(false);
+  };
+
+  const today = new Date().toISOString().split("T")[0];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: C.bg, zIndex: 1100, overflowY: "auto" }}>
+      <div style={{ background: C.surface, borderBottom: "1px solid #3a2e22", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: "20px", fontWeight: "800", color: C.text }}>🏠 Admin Dashboard</div>
+        <button onClick={onClose} style={{ background: C.surface2, border: "1px solid #3a2e22", color: C.muted, borderRadius: "50%", width: "34px", height: "34px", cursor: "pointer", fontSize: "18px" }}>×</button>
+      </div>
+
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "24px 16px" }}>
+        {!authed ? (
+          <div style={{ maxWidth: "320px", margin: "60px auto", textAlign: "center" }}>
+            <div style={{ fontSize: "40px", marginBottom: "16px" }}>🔐</div>
+            <h2 style={{ color: C.text, fontFamily: "'Playfair Display',serif", marginBottom: "20px" }}>Admin Login</h2>
+            <input type="password" placeholder="Enter admin password" value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && login()}
+              style={{ width: "100%", padding: "12px", background: C.surface2, border: "1.5px solid #3a2e22", borderRadius: "10px", fontSize: "16px", color: C.text, marginBottom: "12px", boxSizing: "border-box", fontFamily: "inherit" }} />
+            {error && <div style={{ color: "#e05050", fontSize: "13px", marginBottom: "10px" }}>{error}</div>}
+            <button onClick={login} disabled={loading} style={{ width: "100%", background: "linear-gradient(135deg,#C8944A,#a07535)", color: "#0d0a06", border: "none", borderRadius: "10px", padding: "13px", fontSize: "15px", fontWeight: "800", cursor: "pointer", fontFamily: "inherit" }}>
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "12px", marginBottom: "24px" }}>
+              {[
+                ["📋 Total Bookings", bookings.length],
+                ["✅ Active", bookings.filter(b => b.fields["Check-in"] <= today && b.fields["Check-out"] >= today).length],
+                ["📅 Upcoming", bookings.filter(b => b.fields["Check-in"] > today).length],
+              ].map(([label, val]) => (
+                <div key={label} style={{ background: C.surface, borderRadius: "12px", padding: "16px", border: "1px solid #3a2e22", textAlign: "center" }}>
+                  <div style={{ fontSize: "28px", fontWeight: "800", color: C.accent }}>{val}</div>
+                  <div style={{ fontSize: "12px", color: C.muted, marginTop: "4px" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bookings list */}
+            <h3 style={{ fontFamily: "'Playfair Display',serif", color: C.text, fontSize: "20px", marginBottom: "14px" }}>All Bookings</h3>
+            {bookings.length === 0 ? (
+              <div style={{ color: C.muted, textAlign: "center", padding: "40px" }}>No bookings yet</div>
+            ) : bookings.map((b, i) => {
+              const f = b.fields;
+              const isActive = f["Check-in"] <= today && f["Check-out"] >= today;
+              const isUpcoming = f["Check-in"] > today;
+              const isPast = f["Check-out"] < today;
+              return (
+                <div key={i} style={{ background: C.surface, borderRadius: "14px", padding: "16px", marginBottom: "12px", border: `1px solid ${isActive ? "#C8944A55" : "#3a2e22"}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
+                    <div>
+                      <div style={{ fontSize: "16px", fontWeight: "800", color: C.text }}>{f.Name}</div>
+                      <div style={{ fontSize: "13px", color: C.muted }}>{f.Room} · {f.Bed}</div>
+                    </div>
+                    <span style={{ background: isActive ? "#C8944A22" : isUpcoming ? "#0e180a" : C.surface2, color: isActive ? C.accent : isUpcoming ? C.green : C.muted, borderRadius: "6px", padding: "4px 10px", fontSize: "11px", fontWeight: "800" }}>
+                      {isActive ? "🟢 Active" : isUpcoming ? "📅 Upcoming" : "✓ Past"}
+                    </span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                    {[
+                      ["📧", f.Email], ["📞", f.Phone],
+                      ["Check-in", f["Check-in"] + " 3:00 PM"], ["Check-out", f["Check-out"] + " 11:00 AM"],
+                      ["Paid", "$" + (f["Amount Paid"] || 0).toLocaleString()], ["Total Est.", "$" + (f["Total Estimated"] || 0).toLocaleString()],
+                    ].map(([k, v]) => (
+                      <div key={k} style={{ fontSize: "12px", color: C.muted }}><span style={{ color: C.dim }}>{k}: </span><strong style={{ color: C.text }}>{v}</strong></div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function GreaterBostonHousing() {
   const width = useWidth();
   const isMobile = width < 640;
   const [section, setSection] = useState("rooms");
   const [booking, setBooking] = useState(null);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
   const scroll = useCallback(() => { document.getElementById("nav-anchor")?.scrollIntoView({ behavior: "smooth" }); }, []);
+
+  // Secret admin access: click logo text 7 times
+  const handleLogoClick = () => {
+    const clicks = logoClicks + 1;
+    setLogoClicks(clicks);
+    if (clicks >= 7) { setAdminOpen(true); setLogoClicks(0); }
+  };
 
   return (
     <div style={{ fontFamily: "'Lato',sans-serif", background: C.bg, minHeight: "100vh", color: C.text }}>
@@ -668,7 +868,7 @@ export default function GreaterBostonHousing() {
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(8,5,2,0.48) 0%,rgba(8,5,2,0.2) 40%,rgba(8,5,2,0.75) 100%)" }} />
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: isMobile ? "20px" : "28px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 10 }}>
-          <div style={{ fontSize: isMobile ? "12px" : "14px", fontWeight: "700", letterSpacing: "3px", color: "rgba(255,255,255,0.92)", textTransform: "uppercase", textShadow: "0 1px 8px rgba(0,0,0,0.7)" }}>Greater Boston Housing</div>
+          <div onClick={handleLogoClick} style={{ fontSize: isMobile ? "12px" : "14px", fontWeight: "700", letterSpacing: "3px", color: "rgba(255,255,255,0.92)", textTransform: "uppercase", textShadow: "0 1px 8px rgba(0,0,0,0.7)", cursor: "default", userSelect: "none" }}>Greater Boston Housing</div>
           <button onClick={() => { setSection("rooms"); scroll(); }} style={{ background: "rgba(255,255,255,0.14)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.3)", color: "white", borderRadius: "6px", padding: "8px 18px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}>View Rooms</button>
         </div>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "20px 24px", zIndex: 5 }}>
@@ -865,6 +1065,7 @@ export default function GreaterBostonHousing() {
       )}
 
       {booking && <BookingModal room={booking} onClose={() => setBooking(null)} isMobile={isMobile} />}
+      {adminOpen && <AdminDashboard onClose={() => setAdminOpen(false)} isMobile={isMobile} />}
     </div>
   );
 }
